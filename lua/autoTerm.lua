@@ -1,4 +1,4 @@
-Terminals = {bufs = {}, numBufs = 0, recent = nil, toggled=false}
+local Terminals = {bufs = {}, numBufs = 0, recent = nil, toggled=false}
 local a = vim.api
 local function dirSplit(str)
     local matched = string.match(str, "/([%w%s]+)$") 

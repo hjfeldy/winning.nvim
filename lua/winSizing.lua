@@ -1,6 +1,6 @@
 local a = vim.api
 
-Windows = {dimensions = {}}
+local Windows = {dimensions = {}}
 
 function Windows:winInfo()
     -- Keep tabs on window dimensions
