@@ -17,6 +17,12 @@ Convenient, minimal terminal / window management for Neovim
     - Otherwise, split the terminal windows vertically to contain the new buffer
 - RenameTerm: Rename the currently selected window interactively
 
+## Install
+Install via packer.nvim
+```lua
+use "hjfeldy/winning.nvim"
+```
+
 ## Config
 No config file. Open to feature requests
 
