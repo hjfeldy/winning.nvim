@@ -12,7 +12,7 @@ function Terminals:create()
     local found = self:termWins()
     if found ~= nil then
         local i = 0
-        for _, win in pairs(found) do
+        for _, _ in pairs(found) do
             i = i + 1
         end
         a.nvim_set_current_win(found[i])
@@ -47,11 +47,11 @@ function Terminals:evenWindows()
     end
     local totalWidth = vim.o.columns
     local winCount = 0
-    for i, win in pairs(wins) do
+    for _, _ in pairs(wins) do
         winCount = winCount + 1
     end
     local desiredWidth = math.floor(totalWidth / winCount)
-    for i, win in pairs(wins) do
+    for _, win in pairs(wins) do
         a.nvim_win_set_width(win, desiredWidth)
     end
 end
@@ -66,7 +66,7 @@ function Terminals:delete(index)
     self.bufs[index] = nil
     self.numBufs = self.numBufs - 1
     -- Rotate bufs
-    for i, buf in pairs(self.bufs) do
+    for i, _ in pairs(self.bufs) do
         if i > index then
             self.bufs[i - 1] = self.bufs[i]
             local name = a.nvim_buf_get_name(self.bufs[i - 1].number)
@@ -97,7 +97,7 @@ end
 
 function Terminals:rename(termIndex)
     -- Pick a new name for a terminal
-    if termIndex == nil then 
+    if termIndex == nil then
         termIndex = self.recent
     end
     local bufNr = self.bufs[termIndex].number
@@ -127,7 +127,7 @@ function Terminals:termWins()
     local wins = {}
     local found = false
     local index = 1
-    for i, win in pairs(a.nvim_tabpage_list_wins(0)) do
+    for _, win in pairs(a.nvim_tabpage_list_wins(0)) do
         local bufNr = a.nvim_win_get_buf(win)
         local ft = a.nvim_buf_get_option(bufNr, 'filetype')
         if ft == 'TERM' then
@@ -169,7 +169,7 @@ function Terminals:toggleOn()
     end
     self.toggled = true
     local started = false
-    for i, buf in pairs(self.bufs) do
+    for _, buf in pairs(self.bufs) do
         if buf.focused then
             if not started then
                 vim.cmd('topleft split')
@@ -208,7 +208,7 @@ end
 
 function Terminals:isAttached(termBuf)
     -- print('Checking if buffer ' .. termBuf .. ' is attached')
-    for i, win in pairs(a.nvim_list_wins()) do
+    for _, win in pairs(a.nvim_list_wins()) do
         local buf = a.nvim_win_get_buf(win)
         if buf == termBuf then
             -- print('It is')

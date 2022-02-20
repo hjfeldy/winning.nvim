@@ -1,8 +1,8 @@
 local a = vim.api
 
-windows = {dimensions = {}}
+Windows = {dimensions = {}}
 
-function windows:winInfo()
+function Windows:winInfo()
     -- Keep tabs on window dimensions
     local wins = a.nvim_tabpage_list_wins(0)
     local width, height
@@ -14,7 +14,7 @@ function windows:winInfo()
     end
 end
 
-function windows:zoomedExists()
+function Windows:zoomedExists()
     -- Check if a window is currently zoomed in on
     local wins = a.nvim_tabpage_list_wins(0)
     for _, window in ipairs(wins) do
@@ -25,7 +25,7 @@ function windows:zoomedExists()
     return false
 end
 
-function windows:zoomIn()
+function Windows:zoomIn()
 
     -- Call winInfo only BEFORE zooming. We want to keep track of the non-zoomed dimensions
     -- Do not call winInfo in the scenario where you
@@ -43,7 +43,7 @@ function windows:zoomIn()
     a.nvim_win_set_height(0, height)
 end
 
-function windows:zoomOut()
+function Windows:zoomOut()
     local width, height
     for win, dim in pairs(self.dimensions) do
         width, height = dim.width, dim.height
@@ -55,7 +55,7 @@ function windows:zoomOut()
     self:winInfo()
 end
 
-function windows:toggleZoom()
+function Windows:toggleZoom()
     -- Zoom an unzoomed window. Unzoom a zoomed window
     local thisWin = a.nvim_get_current_win()
     local wins = a.nvim_tabpage_list_wins(0)
@@ -75,6 +75,6 @@ function windows:toggleZoom()
 end
 
 -- Keep tabs on window dimensions upon creation/deletion
-vim.cmd('autocmd TermClose * lua windows:winInfo()')
-vim.cmd('autocmd WinNew * lua windows:winInfo()')
+vim.cmd('autocmd TermClose * lua Windows:winInfo()')
+vim.cmd('autocmd WinNew * lua Windows:winInfo()')
 
