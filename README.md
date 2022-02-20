@@ -1,4 +1,4 @@
 # winning.nvim
 Convenient, minimal terminal / window management for Neovim
 
-![demo](images/demo.webm)
+![demo](images/demo.gif)
