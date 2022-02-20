@@ -206,9 +206,22 @@ function Terminals:setCurrent()
     end
 end
 
+function Terminals:isAttached(termBuf)
+    -- print('Checking if buffer ' .. termBuf .. ' is attached')
+    for i, win in pairs(a.nvim_list_wins()) do
+        local buf = a.nvim_win_get_buf(win)
+        if buf == termBuf then
+            -- print('It is')
+            return true
+        end
+    end
+    -- print('It is not')
+    return false
+end
+
+
 function Terminals:nextTerm()
     -- Cycle the current terminal window to the next terminal buffer in the buffer table
-    local wins = self:termWins()
     local currentBuf = a.nvim_get_current_buf()
     local ft = a.nvim_buf_get_option(currentBuf, 'filetype')
     if ft ~= 'TERM' or self.numBufs == 0 or not self.toggled then
@@ -223,7 +236,7 @@ function Terminals:nextTerm()
     while i < self.numBufs + 2 do
         i = i + 1
         local newTerm = self.bufs[newTermNum]
-        if wins[newTerm.number] ~= nil then
+        if not self:isAttached(newTerm.number) then
             a.nvim_win_set_buf(0, newTerm.number)
             self.recent = newTermNum
             newTerm.focused = true
@@ -245,7 +258,6 @@ end
 
 function Terminals:prevTerm()
     -- Cycle the current terminal window to the previous terminal buffer in the buffer table
-    local wins = self:termWins()
     local currentBuf = a.nvim_get_current_buf()
     local ft = a.nvim_buf_get_option(currentBuf, 'filetype')
     if ft ~= 'TERM' or self.numBufs == 0 or not self.toggled then
@@ -259,7 +271,7 @@ function Terminals:prevTerm()
     while i < self.numBufs + 2 do
         i = i + 1
         local newTerm = self.bufs[newTermNum]
-        if wins[newTerm.number] ~= nil then
+        if not self:isAttached(newTerm.number) then
             a.nvim_win_set_buf(0, newTerm.number)
             self.recent = newTermNum
             newTerm.focused = true
