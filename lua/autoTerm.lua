@@ -1,133 +1,17 @@
 local Terminals = {bufs = {}, numBufs = 0, recent = nil, toggled=false}
 local a = vim.api
+
 local function dirSplit(str)
-    local matched = string.match(str, "/([%w%s]+)$") 
+    local matched = string.match(str, "/([%w%s]+)$")
     return matched
 end
 
-function Terminals:create()
-    -- Create a new terminal
-
-    -- Focus and split a terminal window if there is one
-    local found = self:termWins()
-    if found ~= nil then
-        local i = 0
-        for _, _ in pairs(found) do
-            i = i + 1
-        end
-        a.nvim_set_current_win(found[i])
-        vim.cmd('vsplit term://zsh')
-
-    else
-        -- Create terminal buffer in new window
-        vim.cmd('topleft split term://zsh')
-        local lines = vim.o.lines
-        local toResize = .25 * lines
-        vim.cmd('resize ' .. toResize)
-    end
-
-    vim.cmd('set filetype=TERM')
-    local bufNr = a.nvim_get_current_buf()
-
-    -- Add to the buffer table
-    self.numBufs = self.numBufs + 1
-    local newBuf = {number=bufNr, name = 'Terminal ' .. self.numBufs, focused=true}
-    self.bufs[self.numBufs] = newBuf
-    a.nvim_buf_set_name(newBuf.number, newBuf.name)
-    self.recent = Terminals.numBufs
-    self.toggled = true
-    self:evenWindows()
-end
-
-function Terminals:evenWindows()
-    -- Space out all terminal windows evenly
-    local wins = self:termWins()
-    if wins == nil then
-        return
-    end
-    local totalWidth = vim.o.columns
-    local winCount = 0
-    for _, _ in pairs(wins) do
-        winCount = winCount + 1
-    end
-    local desiredWidth = math.floor(totalWidth / winCount)
-    for _, win in pairs(wins) do
-        a.nvim_win_set_width(win, desiredWidth)
-    end
-end
-
-function Terminals:delete(index)
-    -- Delete a particular terminal buffer from the buffer table
-    if self.numBufs == 0 then
-        return
-    end
-    local bufNr = self.bufs[index].number
-    a.nvim_buf_delete(bufNr, {force=true})
-    self.bufs[index] = nil
-    self.numBufs = self.numBufs - 1
-    -- Rotate bufs
-    for i, _ in pairs(self.bufs) do
-        if i > index then
-            self.bufs[i - 1] = self.bufs[i]
-            local name = a.nvim_buf_get_name(self.bufs[i - 1].number)
-            if dirSplit(name) == 'Terminal ' .. i then
-                a.nvim_buf_set_name(self.bufs[i - 1].number, 'Terminal ' .. i - 1)
-            end
-            self.bufs[i] = nil
-        end
-    end
-
-    -- If we deleted the last focused terminal,
-    --  Set toggled to be false
-    --  Configure the next terminal to bring up on the next toggle
-    local wins = self:termWins()
-    if wins == nil then
-        self.toggled = false
-        if self.numBufs > 0 then
-            local nextFocus = self.recent
-            if nextFocus > self.numBufs then
-                nextFocus = 1
-            end
-        self.bufs[nextFocus].focused = true
-        end
-    end
-    self:evenWindows()
-
-end
-
-function Terminals:rename(termIndex)
-    -- Pick a new name for a terminal
-    if termIndex == nil then
-        termIndex = self.recent
-    end
-    local bufNr = self.bufs[termIndex].number
-    local name = a.nvim_buf_get_name(bufNr)
-    local newName = vim.fn.input('New name for ' .. dirSplit(name) .. ': ')
-    a.nvim_buf_set_name(bufNr, newName)
-end
-
-function Terminals:unfocus()
-    -- To be called by autocmd to mark a terminal as unfocused when its window is closed
-    local currentBuf = a.nvim_get_current_buf()
-    for _, buf in pairs(self.bufs) do
-        if buf.number == currentBuf then
-            buf.focused = false
-        end
-    end
-end
-
-function Terminals:show()
-    for i, buf in ipairs(self.bufs) do
-        print(i, buf.number, buf.focused)
-    end
-end
-
-function Terminals:termWins()
-    -- Generate a table of all open terminal windows
+-- Generate a table of all open terminal windows
+local function termWins()
     local wins = {}
     local found = false
     local index = 1
-    for _, win in pairs(a.nvim_tabpage_list_wins(0)) do
+    for _, win in pairs(a.nvim_list_wins()) do
         local bufNr = a.nvim_win_get_buf(win)
         local ft = a.nvim_buf_get_option(bufNr, 'filetype')
         if ft == 'TERM' then
@@ -143,17 +27,138 @@ function Terminals:termWins()
     return wins
 end
 
-function Terminals:toggleOff()
-    -- Quit all terminal windows
-    self.toggled = false
-    local wins = self:termWins()
+-- Space out all terminal windows evenly
+local function evenWindows()
+    local wins = termWins()
+    if wins == nil then
+        return 
+    end
+    local totalWidth = vim.o.columns
+    local winCount = 0
+    for _, _ in pairs(wins) do
+        winCount = winCount + 1
+    end
+    local desiredWidth = math.floor(totalWidth / winCount)
+    for _, win in pairs(wins) do
+        a.nvim_win_set_width(win, desiredWidth)
+    end
+end
+
+-- Create a new terminal
+local function create()
+    -- Focus and split a terminal window if there is one
+    local found = termWins()
+    if found ~= nil then
+        local i = 0
+        for _, _ in pairs(found) do
+            i = i + 1
+        end
+        -- print('Found!')
+        a.nvim_set_current_win(found[i])
+        vim.cmd('vsplit term://zsh')
+
+    else
+        -- Create terminal buffer in new window
+        vim.cmd('topleft split term://zsh')
+        local lines = vim.o.lines
+        local toResize = .25 * lines
+        vim.cmd('resize ' .. toResize)
+    end
+
+    vim.cmd('set filetype=TERM')
+    local bufNr = a.nvim_get_current_buf()
+
+    -- Add to the buffer table
+    Terminals.numBufs = Terminals.numBufs + 1
+    local newBuf = {number=bufNr, name = 'Terminal ' .. Terminals.numBufs, focused=true}
+    Terminals.bufs[Terminals.numBufs] = newBuf
+    a.nvim_buf_set_name(newBuf.number, newBuf.name)
+    Terminals.recent = Terminals.numBufs
+    Terminals.toggled = true
+    evenWindows()
+end
+
+
+-- Delete the most recently focused terminal from the buffer table
+-- To be triggered by TermClose autocmd when a terminal buffer is deleted 
+local function delete()
+    if Terminals.numBufs == 0 then
+        return
+    end
+    local bufNr = Terminals.bufs[Terminals.recent].number
+    a.nvim_buf_delete(bufNr, {force=true})
+    Terminals.bufs[Terminals.recent] = nil
+    Terminals.numBufs = Terminals.numBufs - 1
+    for i, _ in pairs(Terminals.bufs) do
+        if i > Terminals.recent then
+            Terminals.bufs[i - 1] = Terminals.bufs[i]
+            local name = a.nvim_buf_get_name(Terminals.bufs[i - 1].number)
+            if dirSplit(name) == 'Terminal ' .. i then
+                a.nvim_buf_set_name(Terminals.bufs[i - 1].number, 'Terminal ' .. i - 1)
+            end
+            Terminals.bufs[i] = nil
+        end
+    end
+    -- Set toggled to be false if we deleted the last focused terminal
+    local wins = termWins()
+    if wins == nil then
+        Terminals.toggled = false
+        if Terminals.numBufs > 0 then
+            local nextFocus = Terminals.recent
+            if nextFocus > Terminals.numBufs then
+                nextFocus = 1
+            end
+        Terminals.bufs[nextFocus].focused = true
+        end
+    end
+    evenWindows()
+
+end
+
+-- Rename a terminal buffer interactively
+local function rename(termIndex)
+    if termIndex == nil then 
+        termIndex = Terminals.recent
+    end
+    local bufNr = Terminals.bufs[termIndex].number
+    local name = a.nvim_buf_get_name(bufNr)
+    local newName = vim.fn.input('New name for ' .. dirSplit(name) .. ': ')
+    a.nvim_buf_set_name(bufNr, newName)
+end
+
+-- Mark a terminal as unfocused such that it will not reappear on the next toggle-on 
+-- (you want to keep the terminal buffer, but not in an open window)
+-- To be called by autocmd to mark a terminal as unfocused when its window is closed
+local function unfocus()
+    local currentBuf = a.nvim_get_current_buf()
+    for _, buf in pairs(Terminals.bufs) do
+        if buf.number == currentBuf then
+            buf.focused = false
+        end
+    end
+end
+
+-- Check if a particular terminal buffer is currently visible in a window
+local function isAttached(termBuf)
+    for i, win in pairs(a.nvim_list_wins()) do
+        local buf = a.nvim_win_get_buf(win)
+        if buf == termBuf then
+            return true
+        end
+    end
+    return false
+end
+
+local function toggleOff()
+    Terminals.toggled = false
+    local wins = termWins()
     if wins == nil then
         return
     end
     for _, win in pairs(wins) do
         local currentBuf = a.nvim_win_get_buf(win)
         a.nvim_win_close(win, true)
-        for _, buf in pairs(self.bufs) do
+        for _, buf in pairs(Terminals.bufs) do
             if buf.number == currentBuf then
                 buf.focused = true
             end
@@ -161,15 +166,14 @@ function Terminals:toggleOff()
     end
 end
 
-function Terminals:toggleOn()
-    -- Open back up all off-toggled terminal windows
-    if self.numBufs == 0 then
-        self:create()
+local function toggleOn()
+    if Terminals.numBufs == 0 then
+        create()
         return
     end
-    self.toggled = true
+    Terminals.toggled = true
     local started = false
-    for _, buf in pairs(self.bufs) do
+    for _, buf in pairs(Terminals.bufs) do
         if buf.focused then
             if not started then
                 vim.cmd('topleft split')
@@ -186,63 +190,50 @@ function Terminals:toggleOn()
     end
 end
 
-function Terminals:toggle()
-    -- Quickly open/close terminal windows
-    if self.toggled then
-        self:toggleOff()
+local function toggle()
+    if Terminals.toggled then
+        toggleOff()
     else
-        self:toggleOn()
+        toggleOn()
     end
 end
 
-function Terminals:setCurrent()
-    -- Keep tabs on the most recently occupied terminal window
+-- Mark the recent terminal such that we always know which one was last focused
+-- This way we know which one to pull up on the next on-toggle if we delete the only visible terminal
+local function setCurrent()
     local currentBuf = a.nvim_win_get_buf(0)
-    for i, buf in pairs(self.bufs) do
+    for i, buf in pairs(Terminals.bufs) do
         if buf.number == currentBuf then
-            -- print('Setting current: ' .. i)
-            self.recent = i
+            Terminals.recent = i
         end
     end
 end
 
-function Terminals:isAttached(termBuf)
-    -- print('Checking if buffer ' .. termBuf .. ' is attached')
-    for _, win in pairs(a.nvim_list_wins()) do
-        local buf = a.nvim_win_get_buf(win)
-        if buf == termBuf then
-            -- print('It is')
-            return true
-        end
-    end
-    -- print('It is not')
-    return false
-end
-
-
-function Terminals:nextTerm()
-    -- Cycle the current terminal window to the next terminal buffer in the buffer table
+-- Cycle the current window to contain the next available terminal buffer
+local function nextTerm()
     local currentBuf = a.nvim_get_current_buf()
+    local wins = termWins()
     local ft = a.nvim_buf_get_option(currentBuf, 'filetype')
-    if ft ~= 'TERM' or self.numBufs == 0 or not self.toggled then
+    if ft ~= 'TERM' or Terminals.numBufs == 0 or not Terminals.toggled then
         return
     end
 
     local i = 0
-    local newTermNum = self.recent + 1
-    if newTermNum > self.numBufs then
+    local newTermNum = Terminals.recent + 1
+    if newTermNum > Terminals.numBufs then
         newTermNum = 1
     end
-    while i < self.numBufs + 2 do
+    while i < Terminals.numBufs + 2 do
         i = i + 1
-        local newTerm = self.bufs[newTermNum]
-        if not self:isAttached(newTerm.number) then
+        local newTerm = Terminals.bufs[newTermNum]
+        if not isAttached(newTerm.number) then
+        -- if not isAttached(newTerm.number) then
             a.nvim_win_set_buf(0, newTerm.number)
-            self.recent = newTermNum
+            Terminals.recent = newTermNum
             newTerm.focused = true
 
             -- Unfocus the buf we switched from
-            for _, buf in pairs(self.bufs) do
+            for _, buf in pairs(Terminals.bufs) do
                 if buf.number == currentBuf then
                     buf.focused = false
                 end
@@ -250,34 +241,36 @@ function Terminals:nextTerm()
             break
         end
         newTermNum = newTermNum + 1
-        if newTermNum > self.numBufs then
+        if newTermNum > Terminals.numBufs then
             newTermNum = 1
         end
     end
 end
 
-function Terminals:prevTerm()
-    -- Cycle the current terminal window to the previous terminal buffer in the buffer table
+-- Cycle the current window to contain the next available terminal buffer (traversing the table backwards)
+local function prevTerm()
     local currentBuf = a.nvim_get_current_buf()
     local ft = a.nvim_buf_get_option(currentBuf, 'filetype')
-    if ft ~= 'TERM' or self.numBufs == 0 or not self.toggled then
+    local wins = termWins()
+    if ft ~= 'TERM' or Terminals.numBufs == 0 or not Terminals.toggled then
         return
     end
     local i = 0
-    local newTermNum = self.recent - 1
+    local newTermNum = Terminals.recent - 1
     if newTermNum == 0 then
-        newTermNum = self.numBufs
+        newTermNum = Terminals.numBufs
     end
-    while i < self.numBufs + 2 do
+    while i < Terminals.numBufs + 2 do
         i = i + 1
-        local newTerm = self.bufs[newTermNum]
-        if not self:isAttached(newTerm.number) then
+        local newTerm = Terminals.bufs[newTermNum]
+        if not isAttached(newTerm.number) then
+        -- if not isAttached(newTerm.number) then
             a.nvim_win_set_buf(0, newTerm.number)
-            self.recent = newTermNum
+            Terminals.recent = newTermNum
             newTerm.focused = true
 
             -- Unfocus the buf we switched from
-            for _, buf in pairs(self.bufs) do
+            for _, buf in pairs(Terminals.bufs) do
                 if buf.number == currentBuf then
                     buf.focused = false
                 end
@@ -286,15 +279,18 @@ function Terminals:prevTerm()
         end
         newTermNum = newTermNum - 1
         if newTermNum == 0 then
-            newTermNum = self.numBufs
+            newTermNum = Terminals.numBufs
         end
     end
 end
---[[
--- Delete a terminal buffer from the buffer table anytime the user quits out of the terminal (not when they close the window)
-vim.cmd('autocmd TermClose * lua Terminals:delete(Terminals.recent)')
--- Mark a terminal buffer as unfocused whenever its window is closed
-vim.cmd('autocmd WinClosed * lua Terminals:unfocus()')
--- Check which terminal buffer was last entered whenever the user switches windows
-vim.cmd('autocmd WinEnter * lua Terminals:setCurrent()') ]]
-return Terminals
+
+return {create=create,
+        nextTerm=nextTerm,
+        prevTerm=prevTerm,
+        toggle=toggle,
+        evenWindows=evenWindows,
+        unfocus=unfocus,
+        setCurrent=setCurrent,
+        recent=Terminals.recent,
+        rename=rename,
+        delete=delete}
