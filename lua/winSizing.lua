@@ -75,6 +75,7 @@ function Windows:toggleZoom()
 end
 
 -- Keep tabs on window dimensions upon creation/deletion
-vim.cmd('autocmd TermClose * lua Windows:winInfo()')
-vim.cmd('autocmd WinNew * lua Windows:winInfo()')
+--[[ vim.cmd('autocmd TermClose * lua Windows:winInfo()')
+vim.cmd('autocmd WinNew * lua Windows:winInfo()') ]]
 
+return Windows

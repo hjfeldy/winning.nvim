@@ -290,10 +290,11 @@ function Terminals:prevTerm()
         end
     end
 end
-
+--[[
 -- Delete a terminal buffer from the buffer table anytime the user quits out of the terminal (not when they close the window)
 vim.cmd('autocmd TermClose * lua Terminals:delete(Terminals.recent)')
 -- Mark a terminal buffer as unfocused whenever its window is closed
 vim.cmd('autocmd WinClosed * lua Terminals:unfocus()')
 -- Check which terminal buffer was last entered whenever the user switches windows
-vim.cmd('autocmd WinEnter * lua Terminals:setCurrent()')
+vim.cmd('autocmd WinEnter * lua Terminals:setCurrent()') ]]
+return Terminals

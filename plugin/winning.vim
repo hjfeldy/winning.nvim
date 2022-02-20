@@ -1,6 +1,6 @@
 lua require'autoTerm'
 lua require'winSizing'
-command! ToggleTerm lua Terminals:toggle()
+command! ToggleTerm lua require'autoTerm'.Terminals:toggle()
 command! NextTerm lua Terminals:nextTerm()
 command! PrevTerm lua Terminals:prevTerm()
 command! RenameTerm lua Terminals:rename()
