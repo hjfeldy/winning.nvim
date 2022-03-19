@@ -200,7 +200,7 @@ local function toggleOn()
             end
         end
     end
-    if foundFocused > 0 and Terminals.numBufs > 0 then
+    if foundFocused == 0 and Terminals.numBufs > 0 then
         vim.cmd('topleft split')
         local lines = vim.o.lines
         local toResize = .25 * lines
