@@ -6,7 +6,7 @@ command! EvenTerms lua require'autoTerm'.evenWindows()
 command! NewTerm lua require'autoTerm'.create()
 command! ToggleZoom lua require'winSizing'.toggleZoom()
 
-autocmd TermClose * lua require'autoTerm'.delete()
+" autocmd TermClose * lua require'autoTerm'.delete()
 " autocmd WinClosed * lua require'autoTerm'.unfocus()
 autocmd WinEnter * lua require'autoTerm'.setCurrent()
 autocmd TermClose * lua require'winSizing'.winInfo()
