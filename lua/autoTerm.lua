@@ -191,6 +191,7 @@ local function toggleOn()
             end
             if buf.index == Terminals.recent then
                 toFocus = a.nvim_get_current_win()
+                print('index ' .. buf.index ' == ' .. Terminals.recent)
             end
         end
     end
