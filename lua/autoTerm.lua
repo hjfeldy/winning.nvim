@@ -125,6 +125,7 @@ local function rename(termIndex)
     local newName = vim.fn.input('New name for ' .. dirSplit(name) .. ': ')
     Terminals.bufs[termIndex].name = newName
     a.nvim_buf_set_name(bufNr, newName)
+    return newName
 end
 
 -- Mark a terminal as unfocused such that it will not reappear on the next toggle-on 
