@@ -1,4 +1,7 @@
 local Terminals = {bufs = {}, numBufs = 0, recent = nil, toggled=false}
+local function showTerms() 
+    print(vim.inspect(Terminals.bufs))
+end
 local a = vim.api
 
 local function dirSplit(str)
@@ -306,4 +309,5 @@ return {create=create,
         rename=rename,
         delete=delete,
         Terminals=Terminals,
-        isAttached=isAttached}
+        isAttached=isAttached,
+        showTerms=showTerms}
