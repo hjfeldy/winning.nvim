@@ -179,8 +179,10 @@ local function toggleOn()
     Terminals.toggled = true
     local started = false
     local toFocus = nil
+    local foundFocused = 0
     for i, buf in ipairs(Terminals.bufs) do
         if buf.focused then
+            foundFocused = foundFocused + 1
             if not started then
                 vim.cmd('topleft split')
                 local lines = vim.o.lines
@@ -197,6 +199,13 @@ local function toggleOn()
                 print('index ' .. i .. ' == ' .. Terminals.recent)
             end
         end
+    end
+    if foundFocused > 0 and Terminals.numBufs > 0 then
+        vim.cmd('topleft split')
+        local lines = vim.o.lines
+        local toResize = .25 * lines
+        vim.cmd('resize ' .. toResize)
+        a.nvim_win_set_buf(0, Terminals.bufs[1].number)
     end
     evenWindows()
     if toFocus ~= nil then
