@@ -293,4 +293,5 @@ return {create=create,
         setCurrent=setCurrent,
         recent=Terminals.recent,
         rename=rename,
-        delete=delete}
+        delete=delete,
+        Terminals=Terminals}
