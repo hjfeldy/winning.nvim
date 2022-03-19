@@ -175,6 +175,7 @@ local function toggleOn()
     end
     Terminals.toggled = true
     local started = false
+    local toFocus = nil
     for _, buf in pairs(Terminals.bufs) do
         if buf.focused then
             if not started then
@@ -188,7 +189,14 @@ local function toggleOn()
                 vim.cmd('vsplit')
                 a.nvim_win_set_buf(0, buf.number)
             end
+            if buf.number == Terminals.recent then
+                toFocus = a.nvim_get_current_win()
+            end
         end
+    end
+    evenWindows()
+    if toFocus ~= nil then
+        a.nvim_set_current_win(toFocus)
     end
 end
 
@@ -296,4 +304,5 @@ return {create=create,
         recent=Terminals.recent,
         rename=rename,
         delete=delete,
-        Terminals=Terminals}
+        Terminals=Terminals,
+        isAttached=isAttached}
