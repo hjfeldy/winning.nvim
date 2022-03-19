@@ -176,7 +176,7 @@ local function toggleOn()
     Terminals.toggled = true
     local started = false
     local toFocus = nil
-    for i, buf in pairs(Terminals.bufs) do
+    for i, buf in ipairs(Terminals.bufs) do
         if buf.focused then
             if not started then
                 vim.cmd('topleft split')
@@ -191,7 +191,7 @@ local function toggleOn()
             end
             if i == Terminals.recent then
                 toFocus = a.nvim_get_current_win()
-                print('index ' .. buf.index ' == ' .. Terminals.recent)
+                print('index ' .. i ' == ' .. Terminals.recent)
             end
         end
     end
