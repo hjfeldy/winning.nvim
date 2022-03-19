@@ -70,7 +70,7 @@ local function create()
 
     -- Add to the buffer table
     Terminals.numBufs = Terminals.numBufs + 1
-    local newBuf = {number=bufNr, name = 'Terminal ' .. Terminals.numBufs, focused=true}
+    local newBuf = {number=bufNr, name = 'Terminal ' .. Terminals.numBufs, focused=true, index=Terminals.numBufs}
     Terminals.bufs[Terminals.numBufs] = newBuf
     a.nvim_buf_set_name(newBuf.number, newBuf.name)
     Terminals.recent = Terminals.numBufs
@@ -123,6 +123,7 @@ local function rename(termIndex)
     local bufNr = Terminals.bufs[termIndex].number
     local name = a.nvim_buf_get_name(bufNr)
     local newName = vim.fn.input('New name for ' .. dirSplit(name) .. ': ')
+    Terminals.bufs[termIndex].name = newName
     a.nvim_buf_set_name(bufNr, newName)
 end
 
