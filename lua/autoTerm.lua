@@ -189,7 +189,7 @@ local function toggleOn()
                 vim.cmd('vsplit')
                 a.nvim_win_set_buf(0, buf.number)
             end
-            if buf.number == Terminals.recent then
+            if buf.index == Terminals.recent then
                 toFocus = a.nvim_get_current_win()
             end
         end
