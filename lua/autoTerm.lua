@@ -116,15 +116,20 @@ local function delete()
 end
 
 -- Rename a terminal buffer interactively
-local function rename(termIndex)
-    if termIndex == nil then 
+local function rename(termBuf)
+    if termBuf == nil then
+        termBuf = Terminals.buf[Terminals.recent]
+    end
+    --[[ if termIndex == nil then 
         termIndex = Terminals.recent
     end
-    local bufNr = Terminals.bufs[termIndex].number
-    local name = a.nvim_buf_get_name(bufNr)
+    local bufNr = Terminals.bufs[termIndex].number ]]
+
+    local name = a.nvim_buf_get_name(termBuf.number)
     local newName = vim.fn.input('New name for ' .. dirSplit(name) .. ': ')
-    Terminals.bufs[termIndex].name = newName
-    a.nvim_buf_set_name(bufNr, newName)
+    -- Terminals.bufs[termIndex].name = newName
+    termBuf.name = newName
+    a.nvim_buf_set_name(termBuf.number, newName)
     return newName
 end
 
